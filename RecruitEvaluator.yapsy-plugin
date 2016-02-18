@@ -1,0 +1,7 @@
+[Core]
+Name = Recruit Evaluator
+Module = RecruitEvaluator
+
+[Documentation]
+Version = 0.1
+Description = Evaluate Recruits
