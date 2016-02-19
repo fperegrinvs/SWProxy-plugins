@@ -169,7 +169,7 @@ class RunLogger(SWPlugin.SWPlugin):
                 grade = rune['class']
                 rank = get_map_value(len(rune['sec_eff']), rune_class_map)
 
-                log_entry += "rune,%s*,%s,%s,%s,%s,%s,%s,%0.2f%%" % (
+                log_entry += "rune,%s*,%s,%s,%0.2f%%,%s,%s,%s,%s" % (
                     grade, rune['sell_value'], rune_set, eff, slot, rank, rune_effect(rune['pri_eff']),
                     rune_effect(rune['prefix_eff']))
 
