@@ -120,7 +120,7 @@ class RunLogger(SWPlugin.SWPlugin):
             return '%s %s*' % (monster_name(crate['unit_info']['unit_master_id']), crate['unit_info']['class'])
         return 'Unknown drop %s' % json.dumps(crate)
 
-    def process_request(self, req_json, resp_json, plugins):
+    def process_request(self, req_json, resp_json):
         config = self.config
         if 'log_runs' not in config or not config['log_runs']:
             return

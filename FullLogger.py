@@ -6,7 +6,7 @@ class FullLogger(SWPlugin.SWPlugin):
         with open('swproxy.config') as f:
             self.config = json.load(f)
 
-    def process_request(self, req_json, resp_json, plugins):
+    def process_request(self, req_json, resp_json):
         config = self.config
         if 'full_log' not in config or config['full_log'] == False:
             return
