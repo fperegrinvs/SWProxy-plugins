@@ -29,9 +29,12 @@ rune_class_map = {
 }
 
 dungeon_map = {
+    4001: "Hall of Wind",
+    5001: "Hall of Magic",
     6001: "Necropolis",
     8001: "Giant's Keep",
     9001: "Dragon's Lair",
+    10025: "Hall of Heroes",
 }
 
 difficulty_map = {
@@ -61,6 +64,21 @@ sub_max_value_map = {
     'ATK flat': 14 * 8.0,
     'HP flat': 344 * 8.0,
     'DEF flat': 14 * 8.0,
+}
+
+essence_attribute = {
+    1: 'Water',
+    2: 'Fire',
+    3: 'Wind',
+    4: 'Light',
+    5: 'Dark',
+    6: 'Magic'
+}
+
+essence_grade = {
+    1: 'Low',
+    2: 'Mid',
+    3: 'High'
 }
 
 
@@ -118,6 +136,13 @@ class RunLogger(SWPlugin.SWPlugin):
             return "Power Stone x%s" % crate['rune_upgrade_stone']['item_quantity']
         if 'unit_info' in crate:
             return '%s %s*' % (monster_name(crate['unit_info']['unit_master_id']), crate['unit_info']['class'])
+        if 'material' in crate:
+            id = str(crate['material']['item_master_id'])
+            attribute = essence_attribute[int(id[-1])]
+            grade = essence_grade[int(id[-4])]
+            return "Essence of %s(%s) x%s" % (attribute,grade,crate['material']['item_quantity'])
+        if 'summon_pieces' in crate:
+            return "Summoning Pieces %s x%s" % (monster_name(crate['summon_pieces']['item_master_id']),crate['summon_pieces']['item_quantity'])
         return 'Unknown drop %s' % json.dumps(crate)
 
     def process_request(self, req_json, resp_json):
@@ -132,7 +157,7 @@ class RunLogger(SWPlugin.SWPlugin):
         if command == 'BattleDungeonStart' or command == 'BattleScenarioStart':
             config['start'] = int(time.time())
         if command == 'BattleDungeonStart':
-            config['stage'] = '%s b%s' % (get_map_value(req_json['dungeon_id'], dungeon_map, req_json['dungeon_id']),
+            config['stage'] = '%s B%s' % (get_map_value(req_json['dungeon_id'], dungeon_map, req_json['dungeon_id']),
                                           req_json['stage_id'])
         if command == 'BattleScenarioStart':
             config['stage'] = '%s %s - %s' % (get_map_value(req_json['region_id'], scenario_map),
@@ -147,7 +172,7 @@ class RunLogger(SWPlugin.SWPlugin):
             delta = int(time.time()) - config['start']
             m = divmod(delta, 60)
             s = m[1]  # seconds
-            elapsed_time = '%s:%s' % (m[0], s)
+            elapsed_time = '%s:%02d' % (m[0], s) #added padding to seconds
         else:
             elapsed_time = 'N/A'
 
@@ -169,7 +194,7 @@ class RunLogger(SWPlugin.SWPlugin):
                 grade = rune['class']
                 rank = get_map_value(len(rune['sec_eff']), rune_class_map)
 
-                log_entry += "rune,%s*,%s,%s,%0.2f%%,%s,%s,%s,%s" % (
+                log_entry += "Rune,%s*,%s,%s,%0.2f%%,%s,%s,%s,%s" % (
                     grade, rune['sell_value'], rune_set, eff, slot, rank, rune_effect(rune['pri_eff']),
                     rune_effect(rune['prefix_eff']))
 
@@ -181,9 +206,9 @@ class RunLogger(SWPlugin.SWPlugin):
 
         filename = config['log_filename']
         if not os.path.exists(filename):
-            log_entry = 'date, dungeon, result, clear time, mana, crystal, energy, drop, rune grade, sell value,' \
-                        + 'rune set, max efficiency ,slot, rune rarity, main stat, prefix stat, secondary stat 1, secondary stat 2,' \
-                        + 'secondary stat 3,secondary stat 4\n' + log_entry
+            log_entry = 'Date,Dungeon,Result,Clear time,Mana,Crystal,Energy,Drop,Rune Grade,Sell value,' \
+                        + 'Rune Set,Max Efficiency,Slot,Rune Rarity,Main stat,Prefix stat,Secondary stat 1,Secondary stat 2,' \
+                        + 'Secondary stat 3,Secondary stat 4\n' + log_entry
 
         with open(filename, "a") as fr:
             fr.write(log_entry)
