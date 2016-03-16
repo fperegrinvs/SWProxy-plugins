@@ -14,4 +14,4 @@ This plugin will generate extra data when visiting friend. The extra data is int
 Will log runs and drops from Necro, Dragons, Giants, elemental halls and HoH. The outut filename is defined in the "log_runs_filename" parameter of swproxy.config  
 
 ### Summon Logger
-Will log summons of any type of scroll, social and crystal. Does not work with individual monster pieces (from SD). Is currently untested with LS and L&D pieces. The outut filename is defined in the "log_summon_filename" parameter of swproxy.config
+Will log summons of any type of scroll, including social and crystal summon. Does not work with individual monster pieces (from SD). Is currently untested with LS and L&D pieces. The outut filename is defined in the "log_summon_filename" parameter of swproxy.config
