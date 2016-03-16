@@ -4,5 +4,6 @@ Module = RunLogger
 
 [Documentation]
 Author = Leonardo Stern
+Co-author = Ani
 Version = 0.1
 Description = Log dungeons and scenario runs
