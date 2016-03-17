@@ -3,6 +3,6 @@ Name = Runs Logger
 Module = RunLogger
 
 [Documentation]
-Author = Leonardo Stern
+Author = Leonardo Stern, Ani
 Version = 0.1
 Description = Log dungeons and scenario runs
