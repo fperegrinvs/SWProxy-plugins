@@ -18,7 +18,8 @@ scenario_map = {
     10: 'Aiden Forest',
     11: 'Ferun Castle',
     12: 'Mt Runar',
-    13: 'Chiruka Remains'}
+    13: 'Chiruka Remains'
+}
 
 rune_class_map = {
     0: 'Common',
@@ -29,9 +30,13 @@ rune_class_map = {
 }
 
 dungeon_map = {
+    1001: "Hall of Dark",
+    2001: "Hall of Fire",
+    3001: "Hall of Water",
     4001: "Hall of Wind",
     5001: "Hall of Magic",
     6001: "Necropolis",
+    7001: "Hall of Light",
     8001: "Giant's Keep",
     9001: "Dragon's Lair",
     10025: "Hall of Heroes",

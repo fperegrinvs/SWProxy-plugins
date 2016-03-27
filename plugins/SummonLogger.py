@@ -6,15 +6,14 @@ import time
 from SWParser import monster_name, monster_attribute
 
 sources = {
-	1: 'Unknown', #Confirmed
-	2: 'Mystical', #Confirmed
-	3: '3', #Legendary?
-	4: 'Water', #Confirmed
-	5: 'Fire??', #Presumed
-	6: 'Wind??', #Presumed
-	7: '7', #L&D?
-	8: 'Exclusive', #Confirmed
-	9: '9'
+	1: 'Unknown',
+	2: 'Mystical',
+	3: 'Light & Dark',
+	4: 'Water',
+	5: 'Fire',
+	6: 'Wind',
+	7: 'Legendary',
+	8: 'Exclusive'
 }
 
 def identify_scroll(id):
@@ -43,7 +42,13 @@ class SummonLogger(SWPlugin.SWPlugin):
             if 'item_info' in resp_json:
                 scroll = identify_scroll(resp_json['item_info']['item_master_id'])
             else:
-                scroll = 'Social'
+                mode = req_json['mode']
+                if mode == 3:
+                    scroll = 'Crystal'
+                elif mode == 5:
+                    scroll = 'Social'
+                else:
+                    scroll = 'Unidentified'
             unit_name = monster_name(resp_json['unit_list'][0]['unit_master_id'],'',False)
             attribute = monster_attribute(resp_json['unit_list'][0]['attribute'])
             grade = resp_json['unit_list'][0]['class']
