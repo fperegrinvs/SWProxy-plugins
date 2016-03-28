@@ -4,6 +4,10 @@ plugins for the SW Proxy
 Each plugin have 2 files, a .py file with the actual plugin code and a .yapsy-plugin file with the plugin description. 
 To install the plugins just drop the desired plugins  in the /plugins folder, copy and edit the .config file to the parent foolder and restart sw proxy.
 
+
+* [Video Tutorial](https://www.youtube.com/watch?v=T4zI6HViV9g)
+
+
 ### Full Logger
 Dumps the contents of the requests and responses from/to com2us servers on a text file ("full_log_filename" from swproxy.config)
 
