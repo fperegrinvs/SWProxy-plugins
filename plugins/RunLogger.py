@@ -197,8 +197,13 @@ class RunLogger(SWPlugin.SWPlugin):
         crystal = reward['crystal'] if 'crystal' in reward else 0
         energy = reward['energy'] if 'energy' in reward else 0
 
-        log_entry = "%s,%s,%s,%s,%s,%s,%s," % (time.strftime("%Y-%m-%d %H:%M"),
-                                               config['stage'] if 'stage' in config else 'unknown', win_lost,
+        if 'run-logger-data' in config and wizard_id in config['run-logger-data'] \
+                and 'stage' in config['run-logger-data'][wizard_id]:
+            resp_stage = config['run-logger-data'][wizard_id]['stage']
+        else:
+            resp_stage = 'unknown'
+
+        log_entry = "%s,%s,%s,%s,%s,%s,%s," % (time.strftime("%Y-%m-%d %H:%M"), res_stage, win_lost,
                                                elapsed_time, reward['mana'], crystal, energy)
 
         if 'crate' in reward:
