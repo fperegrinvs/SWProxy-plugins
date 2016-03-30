@@ -203,7 +203,7 @@ class RunLogger(SWPlugin.SWPlugin):
         else:
             resp_stage = 'unknown'
 
-        log_entry = "%s,%s,%s,%s,%s,%s,%s," % (time.strftime("%Y-%m-%d %H:%M"), res_stage, win_lost,
+        log_entry = "%s,%s,%s,%s,%s,%s,%s," % (time.strftime("%Y-%m-%d %H:%M"), resp_stage, win_lost,
                                                elapsed_time, reward['mana'], crystal, energy)
 
         if 'crate' in reward:
