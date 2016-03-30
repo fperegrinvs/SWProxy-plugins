@@ -159,25 +159,36 @@ class RunLogger(SWPlugin.SWPlugin):
         if command == 'BattleScenarioResult' or command == 'BattleDungeonResult':
             return self.log_end_battle(req_json, resp_json, config)
 
-        if command == 'BattleDungeonStart' or command == 'BattleScenarioStart':
-            config['start'] = int(time.time())
         if command == 'BattleDungeonStart':
-            config['stage'] = '%s B%s' % (get_map_value(req_json['dungeon_id'], dungeon_map, req_json['dungeon_id']),
+            stage = '%s B%s' % (get_map_value(req_json['dungeon_id'], dungeon_map, req_json['dungeon_id']),
                                           req_json['stage_id'])
+
         if command == 'BattleScenarioStart':
-            config['stage'] = '%s %s - %s' % (get_map_value(req_json['region_id'], scenario_map),
+            stage = '%s %s - %s' % (get_map_value(req_json['region_id'], scenario_map),
                                               get_map_value(req_json['difficulty'], difficulty_map),
                                               req_json['stage_no'])
+
+        if command == 'BattleDungeonStart' or command == 'BattleScenarioStart':
+            if 'run-logger-data' not in config:
+                config['run-logger-data'] = {}
+
+            plugin_data = config['run-logger-data']
+            wizard_id = str(req_json['wizard_id'])
+            start = int(time.time())
+            plugin_data[wizard_id] = {'stage' : stage, 'start': start}
 
     def log_end_battle(self, req_json, resp_json, config):
         if not config["log_runs"]:
             return
 
-        if 'start' in config:
-            delta = int(time.time()) - config['start']
+        wizard_id = str(resp_json['wizard_info']['wizard_id'])
+        if 'run-logger-data' in config and wizard_id in config['run-logger-data'] \
+                and 'start' in config['run-logger-data'][wizard_id]:
+
+            delta = int(time.time()) - config['run-logger-data'][wizard_id]['start']
             m = divmod(delta, 60)
             s = m[1]  # seconds
-            elapsed_time = '%s:%02d' % (m[0], s) #added padding to seconds
+            elapsed_time = '%s:%02d' % (m[0], s)
         else:
             elapsed_time = 'N/A'
 
@@ -209,7 +220,7 @@ class RunLogger(SWPlugin.SWPlugin):
                 other_item = self.get_item_name(reward['crate'])
                 log_entry += other_item
 
-        filename = config['log_filename']
+        filename = "%s-runs.csv" % wizard_id
         if not os.path.exists(filename):
             log_entry = 'Date,Dungeon,Result,Clear time,Mana,Crystal,Energy,Drop,Rune Grade,Sell value,' \
                         + 'Rune Set,Max Efficiency,Slot,Rune Rarity,Main stat,Prefix stat,Secondary stat 1,Secondary stat 2,' \

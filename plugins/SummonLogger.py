@@ -42,13 +42,7 @@ class SummonLogger(SWPlugin.SWPlugin):
             if 'item_info' in resp_json:
                 scroll = identify_scroll(resp_json['item_info']['item_master_id'])
             else:
-                mode = req_json['mode']
-                if mode == 3:
-                    scroll = 'Crystal'
-                elif mode == 5:
-                    scroll = 'Social'
-                else:
-                    scroll = 'Unidentified'
+                scroll = 'Social'
             unit_name = monster_name(resp_json['unit_list'][0]['unit_master_id'],'',False)
             attribute = monster_attribute(resp_json['unit_list'][0]['attribute'])
             grade = resp_json['unit_list'][0]['class']
@@ -60,7 +54,7 @@ class SummonLogger(SWPlugin.SWPlugin):
 
             log_entry = "%s,%s,%s,%s,%s*,%s" % (time,scroll,unit_name,attribute,grade,awake)
 
-        filename = config['log_summon_filename']
+        filename = "%s-%s" % (resp_json['wizard_info']['wizard_id'], config['log_summon_filename'])
         if not os.path.exists(filename):
             log_entry = 'Date,Summon Type,Unit,Attribute,Grade,Awakened\n' + log_entry
 
