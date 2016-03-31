@@ -1,0 +1,7 @@
+[Core]
+Name = Google Sheets Writer
+Module = GoogleSheetWriter
+
+[Documentation]
+Version = 0.1
+Description = Writes Logs on Google Sheets

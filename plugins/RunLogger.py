@@ -1,9 +1,9 @@
 import json
 import os
 import time
-import SWPlugin
-
-from SWParser import rune_set_id, rune_effect, monster_name, rune_effect_type
+from SWParser import *
+from SWPlugin import SWPlugin
+import threading
 
 scenario_map = {
     1: 'Garen Forest',
@@ -122,7 +122,7 @@ def get_map_value(key, value_map, default='unknown'):
     return value_map[key]
 
 
-class RunLogger(SWPlugin.SWPlugin):
+class RunLogger(SWPlugin):
     def __init__(self):
         with open('swproxy.config') as f:
             self.config = json.load(f)
@@ -156,25 +156,44 @@ class RunLogger(SWPlugin.SWPlugin):
             return
 
         command = req_json['command']
+        if command == 'BattleScenarioStart':
+            stage = '%s %s - %s' % (get_map_value(req_json['region_id'], scenario_map),
+                                              get_map_value(req_json['difficulty'], difficulty_map),
+                                              req_json['stage_no'])
+            if 'run-logger-data' not in config:
+                config['run-logger-data'] = {}
+
+            plugin_data = config['run-logger-data']
+            wizard_id = str(req_json['wizard_id'])
+            plugin_data[wizard_id] = {'stage' : stage}
+
         if command == 'BattleScenarioResult' or command == 'BattleDungeonResult':
-            return self.log_end_battle(req_json, resp_json, config)
+            return self.log_end_battle(req_json,resp_json, config)
 
     def log_end_battle(self, req_json, resp_json, config):
         if not config["log_runs"]:
             return
 
         command = req_json['command']
+
         if command == 'BattleDungeonResult':
             stage = '%s B%s' % (get_map_value(req_json['dungeon_id'], dungeon_map, req_json['dungeon_id']),
                                           req_json['stage_id'])
 
         if command == 'BattleScenarioResult':
-            stage = '%s %s - %s' % (get_map_value(req_json['region_id'], scenario_map),
-                                              get_map_value(req_json['difficulty'], difficulty_map),
-                                              req_json['stage_no'])
+            wizard_id = str(resp_json['wizard_info']['wizard_id'])
+            if 'run-logger-data' in config and wizard_id in config['run-logger-data'] \
+                    and 'stage' in config['run-logger-data'][wizard_id]:
+                stage = config['run-logger-data'][wizard_id]['stage']
+            else:
+                stage = 'unknown'
 
         wizard_id = str(resp_json['wizard_info']['wizard_id'])
         win_lost = 'Win' if resp_json["win_lose"] == 1 else 'Lost'
+
+        # do not log loses
+        if win_lost == 'Lost':
+            return
 
         reward = resp_json['reward'] if 'reward' in resp_json else {}
         crystal = reward['crystal'] if 'crystal' in reward else 0
@@ -184,35 +203,56 @@ class RunLogger(SWPlugin.SWPlugin):
         m = divmod(timer / 1000, 60)
         elapsed_time = '%s:%02d' % (m[0], m[1])
 
-        log_entry = "%s,%s,%s,%s,%s,%s,%s," % (time.strftime("%Y-%m-%d %H:%M"), stage, win_lost,
-                                               elapsed_time, reward['mana'], crystal, energy)
-
-        if 'crate' in reward:
-            if 'rune' in reward['crate']:
-                rune = reward['crate']['rune']
-                eff = rune_efficiency(rune) * 100
-                rune_set = rune_set_id(rune['set_id'])
-                slot = rune['slot_no']
-                grade = rune['class']
-                rank = get_map_value(len(rune['sec_eff']), rune_class_map)
-
-                log_entry += "Rune,%s*,%s,%s,%0.2f%%,%s,%s,%s,%s" % (
-                    grade, rune['sell_value'], rune_set, eff, slot, rank, rune_effect(rune['pri_eff']),
-                    rune_effect(rune['prefix_eff']))
-					
-                for se in rune['sec_eff']:
-                    log_entry += ",%s" % rune_effect(se)
-            else:
-                other_item = self.get_item_name(reward['crate'])
-                log_entry += other_item
 
         filename = "%s-runs.csv" % wizard_id
-        if not os.path.exists(filename):
-            log_entry = 'Date,Dungeon,Result,Clear time,Mana,Crystal,Energy,Drop,Rune Grade,Sell value,' \
-                        + 'Rune Set,Max Efficiency,Slot,Rune Rarity,Main stat,Prefix stat,Secondary stat 1,Secondary stat 2,' \
-                        + 'Secondary stat 3,Secondary stat 4\n' + log_entry
+        is_new_file = not os.path.exists(filename)
 
-        with open(filename, "a") as fr:
-            fr.write(log_entry)
-            fr.write('\n')
-        return
+        with open(filename, "ab") as log_file:
+            field_names = ['date', 'dungeon', 'result', 'time', 'mana', 'crystal', 'energy', 'drop', 'grade', 'value',
+                            'set', 'eff', 'slot', 'rarity', 'main_stat', 'prefix_stat','sub1','sub2','sub3','sub4']
+
+            header = {'date': 'Date','dungeon': 'Dungeon', 'result': 'Result', 'time':'Clear time', 'mana':'Mana',
+                      'crystal': 'Crystal', 'energy': 'Energy', 'drop': 'Drop', 'grade': 'Rune Grade','value': 'Sell value',
+                      'set': 'Rune Set', 'eff': 'Max Efficiency', 'slot': 'Slot', 'rarity': 'Rune Rarity',
+                      'main_stat': 'Main stat', 'prefix_stat': 'Prefix stat', 'sub1': 'Secondary stat 1',
+                      'sub2': 'Secondary stat 2,', 'sub3': 'Secondary stat 3', 'sub4': 'Secondary stat 4'}
+
+            SWPlugin.call_plugins('process_csv_row', ('run_logger', 'header', (field_names, header)))
+
+            log_writer = DictUnicodeWriter(log_file, fieldnames=field_names)
+            if is_new_file:
+                log_writer.writerow(header)
+
+            log_entry = {'date': time.strftime("%Y-%m-%d %H:%M"), 'dungeon': stage, 'result': win_lost,
+                         'time': elapsed_time, 'mana': reward['mana'], 'crystal': crystal, 'energy': energy}
+
+            if 'crate' in reward:
+                if 'rune' in reward['crate']:
+                    rune = reward['crate']['rune']
+                    eff = rune_efficiency(rune) * 100
+                    rune_set = rune_set_id(rune['set_id'])
+                    slot = rune['slot_no']
+                    grade = rune['class']
+                    rank = get_map_value(len(rune['sec_eff']), rune_class_map)
+
+                    log_entry['drop'] = 'Rune'
+                    log_entry['grade'] = '%s*' % grade
+                    log_entry['value'] = rune['sell_value']
+                    log_entry['set'] = rune_set
+                    log_entry['eff'] = '%0.2f%%' % eff
+                    log_entry['slot'] = slot
+                    log_entry['rarity'] = rank
+                    log_entry['main_stat'] = rune_effect(rune['pri_eff'])
+                    log_entry['prefix_stat'] = rune_effect(rune['prefix_eff'])
+
+                    i = 1
+                    for se in rune['sec_eff']:
+                        log_entry['sub%s' %i] = rune_effect(se)
+                        i += 1
+                else:
+                    other_item = self.get_item_name(reward['crate'])
+                    log_entry['drop'] = other_item
+
+            SWPlugin.call_plugins('process_csv_row', ('run_logger', 'entry', (field_names, log_entry)))
+            log_writer.writerow(log_entry)
+            return
