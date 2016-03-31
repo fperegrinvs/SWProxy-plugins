@@ -159,51 +159,32 @@ class RunLogger(SWPlugin.SWPlugin):
         if command == 'BattleScenarioResult' or command == 'BattleDungeonResult':
             return self.log_end_battle(req_json, resp_json, config)
 
-        if command == 'BattleDungeonStart':
-            stage = '%s B%s' % (get_map_value(req_json['dungeon_id'], dungeon_map, req_json['dungeon_id']),
-                                          req_json['stage_id'])
-
-        if command == 'BattleScenarioStart':
-            stage = '%s %s - %s' % (get_map_value(req_json['region_id'], scenario_map),
-                                              get_map_value(req_json['difficulty'], difficulty_map),
-                                              req_json['stage_no'])
-
-        if command == 'BattleDungeonStart' or command == 'BattleScenarioStart':
-            if 'run-logger-data' not in config:
-                config['run-logger-data'] = {}
-
-            plugin_data = config['run-logger-data']
-            wizard_id = str(req_json['wizard_id'])
-            start = int(time.time())
-            plugin_data[wizard_id] = {'stage' : stage, 'start': start}
-
     def log_end_battle(self, req_json, resp_json, config):
         if not config["log_runs"]:
             return
 
+        command = req_json['command']
+        if command == 'BattleDungeonResult':
+            stage = '%s B%s' % (get_map_value(req_json['dungeon_id'], dungeon_map, req_json['dungeon_id']),
+                                          req_json['stage_id'])
+
+        if command == 'BattleScenarioResult':
+            stage = '%s %s - %s' % (get_map_value(req_json['region_id'], scenario_map),
+                                              get_map_value(req_json['difficulty'], difficulty_map),
+                                              req_json['stage_no'])
+
         wizard_id = str(resp_json['wizard_info']['wizard_id'])
-        if 'run-logger-data' in config and wizard_id in config['run-logger-data'] \
-                and 'start' in config['run-logger-data'][wizard_id]:
-
-            delta = int(time.time()) - config['run-logger-data'][wizard_id]['start']
-            m = divmod(delta, 60)
-            s = m[1]  # seconds
-            elapsed_time = '%s:%02d' % (m[0], s)
-        else:
-            elapsed_time = 'N/A'
-
         win_lost = 'Win' if resp_json["win_lose"] == 1 else 'Lost'
+
         reward = resp_json['reward'] if 'reward' in resp_json else {}
         crystal = reward['crystal'] if 'crystal' in reward else 0
         energy = reward['energy'] if 'energy' in reward else 0
+        timer = req_json['clear_time']
 
-        if 'run-logger-data' in config and wizard_id in config['run-logger-data'] \
-                and 'stage' in config['run-logger-data'][wizard_id]:
-            resp_stage = config['run-logger-data'][wizard_id]['stage']
-        else:
-            resp_stage = 'unknown'
+        m = divmod(timer / 1000, 60)
+        elapsed_time = '%s:%02d' % (m[0], m[1])
 
-        log_entry = "%s,%s,%s,%s,%s,%s,%s," % (time.strftime("%Y-%m-%d %H:%M"), resp_stage, win_lost,
+        log_entry = "%s,%s,%s,%s,%s,%s,%s," % (time.strftime("%Y-%m-%d %H:%M"), stage, win_lost,
                                                elapsed_time, reward['mana'], crystal, energy)
 
         if 'crate' in reward:
@@ -218,7 +199,7 @@ class RunLogger(SWPlugin.SWPlugin):
                 log_entry += "Rune,%s*,%s,%s,%0.2f%%,%s,%s,%s,%s" % (
                     grade, rune['sell_value'], rune_set, eff, slot, rank, rune_effect(rune['pri_eff']),
                     rune_effect(rune['prefix_eff']))
-
+					
                 for se in rune['sec_eff']:
                     log_entry += ",%s" % rune_effect(se)
             else:
