@@ -113,7 +113,7 @@ class ArenaLogger(SWPlugin):
                       'team1': 'Team1', 'team2': 'Team2', 'team3': 'Team3', 'team4': 'Team4',
                       'opteam1': 'OpTeam1', 'opteam2': 'OpTeam2', 'opteam3': 'OpTeam3', 'opteam4': 'OpTeam4'}
 
-            SWPlugin.call_plugins('process_csv_row', ('run_logger', 'header', (field_names, header)))
+            SWPlugin.call_plugins('process_csv_row', ('arena_logger', 'header', (field_names, header)))
 
             log_writer = DictUnicodeWriter(log_file, fieldnames=field_names)
             if is_new_file:
@@ -132,6 +132,6 @@ class ArenaLogger(SWPlugin):
                 log_entry[field_names[11+i]] = monster_name(opp_monster_list[i])
                 i += 1
 
-            SWPlugin.call_plugins('process_csv_row', ('run_logger', 'entry', (field_names, log_entry)))
+            SWPlugin.call_plugins('process_csv_row', ('arena_logger', 'entry', (field_names, log_entry)))
             log_writer.writerow(log_entry)
             return
