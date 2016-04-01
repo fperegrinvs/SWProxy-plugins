@@ -1,0 +1,8 @@
+[Core]
+Name = Arena Logger
+Module = ArenaLogger
+
+[Documentation]
+Author = Ani
+Version = 0.1
+Description = Log arena battles
