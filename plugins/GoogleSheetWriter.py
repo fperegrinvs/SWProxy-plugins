@@ -11,7 +11,7 @@ class GoogleSheetWriter(SWPlugin.SWPlugin):
             self.config = json.load(f)
 
     def process_csv_row(self, csv_type, data_type, data):
-        if csv_type not in ['run_logger']:
+        if csv_type not in ['run_logger', 'arena_logger']:
             return
         t = threading.Thread(target=self.save_row, args = (csv_type, data_type, data))
         t.daemon = True
@@ -20,12 +20,17 @@ class GoogleSheetWriter(SWPlugin.SWPlugin):
 
     def save_row(self, csv_type, data_type, data):
         if data_type == 'entry':
+			if csv_type == 'run_logger':
+				tab = 'Runs'
+			elif csv_type == 'arena_logger':
+				tab = 'Arena'
+				
             names, row = data
             key_file = self.config['google_key']
             sheet_name = self.config['sheet_name']
             scope = ['https://spreadsheets.google.com/feeds']
             credentials = ServiceAccountCredentials.from_json_keyfile_name(key_file, scope)
-            gc = gspread.authorize(credentials)
+            gc = gspread.authorize(credentials).worksheet(tab)
             wks = gc.open(sheet_name).sheet1
             line = int(wks.acell('V1').value) + 2
             cl = wks.range('A%s:U%s' % (line, line))
