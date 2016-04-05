@@ -191,8 +191,8 @@ class RunLogger(SWPlugin):
         wizard_id = str(resp_json['wizard_info']['wizard_id'])
         win_lost = 'Win' if resp_json["win_lose"] == 1 else 'Lost'
 
-        # do not log loses
-        if win_lost == 'Lost':
+        # Are we recording losses?
+        if not config["log_wipes"] and win_lost == 'Lost':
             return
 
         reward = resp_json['reward'] if 'reward' in resp_json else {}
