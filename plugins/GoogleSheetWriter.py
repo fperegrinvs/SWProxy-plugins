@@ -11,7 +11,7 @@ class GoogleSheetWriter(SWPlugin.SWPlugin):
             self.config = json.load(f)
 
     def process_csv_row(self, csv_type, data_type, data):
-        if csv_type not in ['run_logger', 'arena_logger']:
+        if csv_type not in ['run_logger', 'arena_logger', 'summon_logger', 'raid_logger']:
             return
         t = threading.Thread(target=self.save_row, args = (csv_type, data_type, data))
         t.daemon = True
@@ -22,8 +22,20 @@ class GoogleSheetWriter(SWPlugin.SWPlugin):
         if data_type == 'entry':
             if csv_type == 'run_logger':
                 tab = 'Runs'
+                last_column = 'T'
+                total = 'V1'
             elif csv_type == 'arena_logger':
                 tab = 'Arena'
+                last_column = 'P'
+                total = 'R1'
+            elif csv_type == 'summon_logger':
+                tab = 'Summon'
+                last_column = 'F'
+                total = 'H1'
+            elif csv_type == 'raid_logger':
+                tab = 'Raid'
+                last_column = 'K'
+                total = 'M1'
 
             names, row = data
             key_file = self.config['google_key']
@@ -32,8 +44,8 @@ class GoogleSheetWriter(SWPlugin.SWPlugin):
             credentials = ServiceAccountCredentials.from_json_keyfile_name(key_file, scope)
             gc = gspread.authorize(credentials)
             wks = gc.open(sheet_name).worksheet(tab)
-            line = int(wks.acell('V1').value) + 2
-            cl = wks.range('A%s:U%s' % (line, line))
+            line = int(wks.acell(total).value) + 2
+            cl = wks.range('A%s:%s%s' % (line, last_column, line))
             for (i, name) in enumerate(names):
                 if name in row:
                     cl[i].value = row[name]
