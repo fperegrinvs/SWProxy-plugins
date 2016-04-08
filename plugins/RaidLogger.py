@@ -1,9 +1,9 @@
 import json
 import os
 import time
-import SWPlugin
-
-from SWParser import rune_set_id, rune_effect, monster_name, rune_effect_type
+from SWParser import *
+from SWPlugin import SWPlugin
+import threading
 
 runecraft_grade_map = {
     1: 'Common',
@@ -23,7 +23,7 @@ def identify_raid(id):
 def identify_rune_grade(id):
     return runecraft_grade_map[id]
 
-class RaidLogger(SWPlugin.SWPlugin):
+class RaidLogger(SWPlugin):
     def __init__(self):
         with open('swproxy.config') as f:
             self.config = json.load(f)
@@ -70,8 +70,6 @@ class RaidLogger(SWPlugin.SWPlugin):
             elapsed_time = 'N/A'
 
         win_lost = 'Win' if resp_json["win_lose"] == 1 else 'Lost'
-        log_entry = "%s,%s,%s,%s,%s,%s," % (time.strftime("%Y-%m-%d %H:%M"), start_data['stage'] if 'stage' in start_data else 'unknown',
-                                            win_lost, elapsed_time, start_data['team'][0], start_data['team'][1])
 
         if win_lost == 'Win':
             order = 0
@@ -83,9 +81,9 @@ class RaidLogger(SWPlugin.SWPlugin):
 
             reward = resp_json['battle_reward_list'][order]['reward_list'][0]
             if reward['item_master_type'] == 1:
-                log_entry += "%s" % 'Rainbowmon 3*'
+                log_reward = {'drop': 'Rainbowmon 3*'}
             elif reward['item_master_type'] == 6:
-                log_entry += "%s,%s" % ('Mana Stones', reward['item_quantity'])
+                log_reward = {'drop': 'Mana Stones', 'value': reward['item_quantity']}
             elif reward['item_master_type'] == 27:
                 if reward['runecraft_type'] == 2:
                     item = 'Grindstone'
@@ -95,22 +93,38 @@ class RaidLogger(SWPlugin.SWPlugin):
                 rune_set = rune_set_id(reward['runecraft_set_id'])
                 rarity = identify_rune_grade(reward['runecraft_rank'])
                 stat = rune_effect_type(reward['runecraft_effect_id'])
-                log_entry += "%s,%s,%s,%s,%s" % (item, value, rune_set, rarity, stat)
+                log_reward = {'drop': item, 'value': value, 'set': rune_set, 'rarity': rarity, 'stat': stat}
             elif reward['item_master_type'] == 9:
                 if reward['item_master_id'] == 2:
-                    log_entry += "Mystical Scroll"
+                    log_reward = {'drop': "Mystical Scroll"}
                 elif reward['item_master_id'] == 8:
-                    log_entry += "Summoning Stones x%s" % reward['item_quantity']
+                    log_reward = {'drop': "Summoning Stones x%s" % reward['item_quantity']}
             elif reward['item_master_type'] == 10: #placeholder waiting for info
-                log_entry += "Shapeshifting Stone x%s" % reward['item_quantity']
+                log_reward = {'drop': "Shapeshifting Stone x%s" % reward['item_quantity']}
             else:
-                log_entry += "Unknown drop %s" % json.dumps(reward)
+                log_reward = {'drop': "Unknown drop %s" % json.dumps(reward)}
 
         filename = "%s-raids.csv" % wizard_id
-        if not os.path.exists(filename):
-            log_entry = 'Date,Raid,Result,Clear time,Teammate #1,Teammate #2,Drop,Sell Value,Rune Set,Rarity,Stat\n' + log_entry
+        is_new_file = not os.path.exists(filename)
 
-        with open(filename, "a") as fr:
-            fr.write(log_entry)
-            fr.write('\n')
-        return
+        with open(filename, "ab") as log_file:
+            field_names = ['date', 'raid', 'result', 'time', 'team1', 'team2', 'drop', 'value', 'set', 'rarity', 'stat']
+
+            header = {'date': 'Date', 'raid': 'Raid', 'result': 'Result', 'time': 'Clear time', 
+                      'team1': 'Teammate #1', 'team2': 'Teammate #2', 'drop': 'Drop', 'value': 'Sell value',
+                      'set': 'Rune Set', 'rarity': 'Rarity', 'stat': 'Stat'}
+
+            SWPlugin.call_plugins('process_csv_row', ('raid_logger', 'header', (field_names, header)))
+
+            log_writer = DictUnicodeWriter(log_file, fieldnames=field_names)
+            if is_new_file:
+                log_writer.writerow(header)
+
+            log_entry = {'date': time.strftime("%Y-%m-%d %H:%M"), 'raid': start_data['stage'] if 'stage' in start_data else 'unknown', 
+                         'result': win_lost, 'time': elapsed_time, 'team1': start_data['team'][0], 'team2': start_data['team'][1]}
+
+            log_entry.update(log_reward)
+
+            SWPlugin.call_plugins('process_csv_row', ('raid_logger', 'entry', (field_names, log_entry)))
+            log_writer.writerow(log_entry)
+            return
