@@ -1,0 +1,7 @@
+[Core]
+Name = World Boss Logger
+Module = WorldBossLogger
+
+[Documentation]
+Version = 0.1
+Description = Log World Boss Results
