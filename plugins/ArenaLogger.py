@@ -7,14 +7,14 @@ import threading
 
 rival_name = { #there may be more, given alt versions of rivals
     '5001': "(R) Gready",
-    '5002': "(R) Razak",
+    '5002': "(R) Morgana",
     '5003': "(R) Edmund",
     '5004': "(R) Volta",
     '5006': "(R) Taihan",
     '5007': "(R) Shai",
-    '5009': "(R) Morgana",
+    '5009': "(R) Razak",
     '5010': "(R) Kellan",
-    '5011': "(R) Kiyan"
+    '5011': "(R) Kian"
 }
 
 class ArenaLogger(SWPlugin):
