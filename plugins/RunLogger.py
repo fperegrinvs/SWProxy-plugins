@@ -253,7 +253,7 @@ class RunLogger(SWPlugin):
                     other_item = self.get_item_name(reward['crate'])
                     log_entry['drop'] = other_item
 
-            if 'instance_info' in reward:
+            if 'instance_info' in resp_json:
                 log_entry['drop'] = 'Secret Dungeon'
 
             SWPlugin.call_plugins('process_csv_row', ('run_logger', 'entry', (field_names, log_entry)))
