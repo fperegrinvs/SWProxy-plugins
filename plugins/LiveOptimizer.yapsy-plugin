@@ -1,0 +1,7 @@
+[Core]
+Name = Live Optimizer
+Module = LiveOptimizer
+
+[Documentation]
+Version = 0.1
+Description = Keep the rune optimizer synched with SW
