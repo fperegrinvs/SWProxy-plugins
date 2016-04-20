@@ -1,19 +1,19 @@
-import SWPlugin
 import json
 import os
 import time
-
-from SWParser import monster_name, monster_attribute
+from SWParser import *
+from SWPlugin import SWPlugin
+import threading
 
 sources = {
-	1: 'Unknown',
-	2: 'Mystical',
-	3: 'Light & Dark',
-	4: 'Water',
-	5: 'Fire',
-	6: 'Wind',
-	7: 'Legendary',
-	8: 'Exclusive',
+	1: 'Unknown Scroll',
+	2: 'Mystical Scroll',
+	3: 'Light & Dark Scroll',
+	4: 'Water Scroll',
+	5: 'Fire Scroll',
+	6: 'Wind Scroll',
+	7: 'Legendary Scroll',
+	8: 'Exclusive Summons',
 	9: "Legendary Pieces",
 	10: "Light & Dark Pieces"
 }
@@ -21,7 +21,7 @@ sources = {
 def identify_scroll(id):
     return sources[id]
 
-class SummonLogger(SWPlugin.SWPlugin):
+class MonsterLogger(SWPlugin):
     def __init__(self):
         with open('swproxy.config') as f:
             self.config = json.load(f)
@@ -39,8 +39,8 @@ class SummonLogger(SWPlugin.SWPlugin):
         if not config["log_summon"]:
             return
 
+        wizard_id = str(resp_json['wizard_info']['wizard_id'])
         if 'unit_list' in resp_json:
-            time = resp_json['unit_list'][0]['create_time']
             if 'item_info' in resp_json:
                 scroll = identify_scroll(resp_json['item_info']['item_master_id'])
             else:
@@ -49,6 +49,8 @@ class SummonLogger(SWPlugin.SWPlugin):
                     scroll = 'Crystal'
                 elif mode == 5:
                     scroll = 'Social'
+                else:
+                    scroll = 'Unidentified'
             unit_name = monster_name(resp_json['unit_list'][0]['unit_master_id'],'',False)
             attribute = monster_attribute(resp_json['unit_list'][0]['attribute'])
             grade = resp_json['unit_list'][0]['class']
@@ -58,13 +60,24 @@ class SummonLogger(SWPlugin.SWPlugin):
             else:
                 awake = 'Yes'
 
-            log_entry = "%s,%s,%s,%s,%s*,%s" % (time,scroll,unit_name,attribute,grade,awake)
+        filename = "%s-summons.csv" % wizard_id
+        is_new_file = not os.path.exists(filename)
 
-        filename = "%s-summons.csv" % resp_json['wizard_info']['wizard_id']
-        if not os.path.exists(filename):
-            log_entry = 'Date,Summon Type,Unit,Attribute,Grade,Awakened\n' + log_entry
+        with open(filename, "ab") as log_file:
+            field_names = ['date', 'scroll', 'unit_name', 'attribute', 'grade', 'awake']
 
-        with open(filename, "a") as fr:
-            fr.write(log_entry)
-            fr.write('\n')
-        return
+            header = {'date': 'Date', 'scroll': 'Scroll', 'unit_name': 'Unit', 'attribute': 'Attribute', 'grade': 'Grade',
+                      'awake': 'Awakened'}
+
+            SWPlugin.call_plugins('process_csv_row', ('summon_logger', 'header', (field_names, header)))
+
+            log_writer = DictUnicodeWriter(log_file, fieldnames=field_names)
+            if is_new_file:
+                log_writer.writerow(header)
+
+            log_entry = {'date': time.strftime("%Y-%m-%d %H:%M"), 'scroll': scroll, 'unit_name': unit_name,
+                         'attribute': attribute, 'grade': grade, 'awake': awake}
+
+            SWPlugin.call_plugins('process_csv_row', ('summon_logger', 'entry', (field_names, log_entry)))
+            log_writer.writerow(log_entry)
+            return
