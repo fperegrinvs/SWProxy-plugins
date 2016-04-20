@@ -1,0 +1,7 @@
+[Core]
+Name = Collector Plugin
+Module = CollectorPlugin
+
+[Documentation]
+Version = 0.1
+Description = Collect data from runs and summons

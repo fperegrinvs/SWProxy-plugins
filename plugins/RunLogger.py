@@ -157,9 +157,11 @@ class RunLogger(SWPlugin):
 
         command = req_json['command']
         if command == 'BattleScenarioStart':
-            stage = '%s %s - %s' % (get_map_value(req_json['region_id'], scenario_map),
-                                              get_map_value(req_json['difficulty'], difficulty_map),
-                                              req_json['stage_no'])
+            region_id = req_json['region_id']
+
+            stage = '%s %s - %s' % (get_map_value(region_id, scenario_map),
+                                            get_map_value(req_json['difficulty'], difficulty_map),
+                                            req_json['stage_no'])
             if 'run-logger-data' not in config:
                 config['run-logger-data'] = {}
 
@@ -177,7 +179,11 @@ class RunLogger(SWPlugin):
         command = req_json['command']
 
         if command == 'BattleDungeonResult':
-            stage = '%s B%s' % (get_map_value(req_json['dungeon_id'], dungeon_map, req_json['dungeon_id']),
+            dungeon_id = req_json['dungeon_id']
+            if dungeon_id > 10025:
+                dungeon_id = 10025
+
+            stage = '%s B%s' % (get_map_value(dungeon_id, dungeon_map, req_json['dungeon_id']),
                                           req_json['stage_id'])
 
         if command == 'BattleScenarioResult':
@@ -191,8 +197,8 @@ class RunLogger(SWPlugin):
         wizard_id = str(resp_json['wizard_info']['wizard_id'])
         win_lost = 'Win' if resp_json["win_lose"] == 1 else 'Lost'
 
-        # Are we recording losses?
-        if not config["log_wipes"] and win_lost == 'Lost':
+        # do not log loses
+        if win_lost == 'Lost':
             return
 
         reward = resp_json['reward'] if 'reward' in resp_json else {}
@@ -208,14 +214,17 @@ class RunLogger(SWPlugin):
         is_new_file = not os.path.exists(filename)
 
         with open(filename, "ab") as log_file:
-            field_names = ['date', 'dungeon', 'result', 'time', 'mana', 'crystal', 'energy', 'drop', 'grade', 'value',
+            field_names = ['wizard_id', 'server_tz', 'date', 'dungeon', 'result', 'time', 'mana', 'crystal', 'energy', 'drop', 'grade', 'value',
                             'set', 'eff', 'slot', 'rarity', 'main_stat', 'prefix_stat','sub1','sub2','sub3','sub4']
 
-            header = {'date': 'Date','dungeon': 'Dungeon', 'result': 'Result', 'time':'Clear time', 'mana':'Mana',
+            header = {'wizard_id': 'wizard id', 'server_tz': 'server timezone', 'date': 'Date','dungeon': 'Dungeon', 'result': 'Result', 'time':'Clear time', 'mana':'Mana',
                       'crystal': 'Crystal', 'energy': 'Energy', 'drop': 'Drop', 'grade': 'Rune Grade','value': 'Sell value',
                       'set': 'Rune Set', 'eff': 'Max Efficiency', 'slot': 'Slot', 'rarity': 'Rune Rarity',
                       'main_stat': 'Main stat', 'prefix_stat': 'Prefix stat', 'sub1': 'Secondary stat 1',
                       'sub2': 'Secondary stat 2,', 'sub3': 'Secondary stat 3', 'sub4': 'Secondary stat 4'}
+
+            excludes = ['wizard_id', 'server_tz']
+
 
             SWPlugin.call_plugins('process_csv_row', ('run_logger', 'header', (field_names, header)))
 
@@ -224,7 +233,8 @@ class RunLogger(SWPlugin):
                 log_writer.writerow(header)
 
             log_entry = {'date': time.strftime("%Y-%m-%d %H:%M"), 'dungeon': stage, 'result': win_lost,
-                         'time': elapsed_time, 'mana': reward['mana'], 'crystal': crystal, 'energy': energy}
+                         'time': elapsed_time, 'mana': reward['mana'], 'crystal': crystal, 'energy': energy,
+                         'wizard_id': wizard_id, 'server_tz': resp_json['tzone']}
 
             if 'crate' in reward:
                 if 'rune' in reward['crate']:
@@ -253,9 +263,7 @@ class RunLogger(SWPlugin):
                     other_item = self.get_item_name(reward['crate'])
                     log_entry['drop'] = other_item
 
-            if 'instance_info' in resp_json:
-                log_entry['drop'] = 'Secret Dungeon'
+            SWPlugin.call_plugins('process_csv_row', ('run_logger', 'entry', (field_names, log_entry, excludes)))
 
-            SWPlugin.call_plugins('process_csv_row', ('run_logger', 'entry', (field_names, log_entry)))
             log_writer.writerow(log_entry)
             return
