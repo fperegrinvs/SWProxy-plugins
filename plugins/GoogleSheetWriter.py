@@ -11,7 +11,7 @@ class GoogleSheetWriter(SWPlugin.SWPlugin):
             self.config = json.load(f)
 
     def process_csv_row(self, csv_type, data_type, data):
-        if csv_type not in ['run_logger', 'arena_logger', 'summon_logger', 'raid_logger', 'worldboss_logger', 'toa_logger']:
+        if csv_type not in ['run_logger', 'arena_logger', 'summon_logger', 'raid_logger', 'worldboss_logger', 'toa_logger', 'guild_battle_logger']:
             return
 
         t = threading.Thread(target=self.save_row, args = (csv_type, data_type, data))
@@ -44,6 +44,10 @@ class GoogleSheetWriter(SWPlugin.SWPlugin):
                 tab = 'ToA'
                 last_column = 'O'
                 total = 'Q1'
+            elif csv_type == 'guild_battle_logger':
+                tab = 'Guild'
+                last_column = 'S'
+                total = 'U1'
 
             names, row = data
             key_file = self.config['google_key']
