@@ -1,0 +1,7 @@
+[Core]
+Name = SWARFARM Logger
+Module = SwarfarmLogger
+
+[Documentation]
+Version = 0.1
+Description = Capture dungeon/scenario and summon results and upload to SWARFARM
