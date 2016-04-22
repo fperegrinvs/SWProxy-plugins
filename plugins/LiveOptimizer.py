@@ -35,12 +35,14 @@ class LiveOptimizer(SWPlugin):
 
     def log_buy_rune(self, req_json, resp_json, config):
         if 'runes' in resp_json and len(resp_json['runes']) == 1:
+            rune_json, _ = map_rune(resp_json['runes'][0], '0')
             self.save_action(req_json['wizard_id'], req_json["ts_val"], 'new_rune',
-                         {'rune':  map_rune(resp_json['runes'][0], '0') })
+                         {'rune': rune_json })
 
     def log_amplify_rune(self, req_json, resp_json, config):
+        rune_json, _ =  map_rune(resp_json['rune'], '0')
         self.save_action(req_json['wizard_id'], req_json["ts_val"], 'amplify_rune',
-                         {'rune_id': req_json['rune_id'], 'craft_id': req_json['craft_item_id'], 'rune':  map_rune(resp_json['rune'], '0') })
+                         {'rune_id': req_json['rune_id'], 'craft_id': req_json['craft_item_id'], 'rune': rune_json })
 
     def log_unequip_rune(self, req_json, resp_json, config):
         self.save_action(req_json['wizard_id'], req_json["ts_val"], 'unequip_rune', {'rune_id': req_json['rune_id']})
@@ -49,7 +51,8 @@ class LiveOptimizer(SWPlugin):
         self.save_action(req_json['wizard_id'], req_json["ts_val"], 'equip_rune', {'rune_id': req_json['rune_id'], 'mob_id': req_json['unit_id']})
 
     def log_upgrade_rune(self, req_json, resp_json, config):
-        self.save_action(req_json['wizard_id'], req_json["ts_val"], 'upgrade_rune', {'rune': map_rune(resp_json['rune'], '0')})
+        rune_json, _ =  map_rune(resp_json['rune'], '0')
+        self.save_action(req_json['wizard_id'], req_json["ts_val"], 'upgrade_rune', {'rune': rune_json})
 
     def log_sell_rune(self, req_json, resp_json, config):
         self.save_action(req_json['wizard_id'], req_json["ts_val"], 'sell_rune', {'rune_id_list': req_json['rune_id_list']})
