@@ -192,7 +192,7 @@ class RunLogger(SWPlugin):
         win_lost = 'Win' if resp_json["win_lose"] == 1 else 'Lost'
 
         # Are we recording losses?
-        if not config["log_wipes"] and win_lost == 'Lost':
+        if 'log_wipes' in config and not config["log_wipes"] and win_lost == 'Lost':
             return
 
         reward = resp_json['reward'] if 'reward' in resp_json else {}
