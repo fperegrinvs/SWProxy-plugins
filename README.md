@@ -40,5 +40,5 @@ Will log results from ToA attempts, it includes floor, difficulty, team used and
 ### World Boss Logger
 Will log each attack against the world boss, including the attack power, elemental bonus, total damage, grade and all the mobs selected for the fight. The outut filename is [user_id]_worldboss.csv
 
-### SWarfarn Logger
+### SWarfarm Logger
 Will send data about your runs and summons to [swarfarm](https://swarfarm.com/) where you will have access to full data and statistics about your runs. Site will also offer aggregate statistics using data from all users.
