@@ -1,20 +1,32 @@
 import SWPlugin
 import logging
 import json
-import httplib, urllib
+import os
+import threading
+import urllib
 
 logger = logging.getLogger("SWProxy")
 
 
 class SwarfarmLogger(SWPlugin.SWPlugin):
     def __init__(self):
-        with open('swproxy.config') as f:
+        config_name = 'swproxy.config'
+        if not os.path.exists(config_name):
+            self.config = {}
+            return
+
+        with open(config_name) as f:
             self.config = json.load(f)
 
     def process_request(self, req_json, resp_json):
-        if 'enable_swarfarm_logger' not in self.config or not self.config['enable_swarfarm_logger']:
+        if 'disable_swarfarm_logger' in self.config and self.config['disable_swarfarm_logger']:
             return
 
+        t = threading.Thread(target=self.process_data, args=(req_json, resp_json))
+        t.start()
+        return
+
+    def process_data(self, req_json, resp_json):
         command = req_json.get('command')
 
         if command not in ['BattleDungeonResult', 'BattleScenarioResult', 'SummonUnit']:
@@ -50,10 +62,6 @@ class SwarfarmLogger(SWPlugin.SWPlugin):
             pass
 
         if result_data:
-            with open(str(resp_json['ts_val']) + '-logger-output.json', 'ab') as f:
-                json.dump(result_data, f)
-                f.write('\n\n')
-
             data = json.dumps(result_data)
             url = 'https://swarfarm.com/data/log/upload/'
             resp = urllib.urlopen(url, data=urllib.urlencode({'data': data}))
