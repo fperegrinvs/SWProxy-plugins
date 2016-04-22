@@ -68,4 +68,4 @@ class SwarfarmLogger(SWPlugin.SWPlugin):
             content = resp.readlines()
             resp.close()
             if resp.getcode() != 200:
-                logger.warn('SwarfarmLogger - Error: ' + content)
+                logger.warn('SwarfarmLogger - Error: %s' % content)
