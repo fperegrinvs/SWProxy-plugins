@@ -2,16 +2,25 @@ import SWPlugin
 import gspread
 import threading
 import json
+import os
 from oauth2client.service_account import ServiceAccountCredentials
 
 
 class GoogleSheetWriter(SWPlugin.SWPlugin):
     def __init__(self):
+        config_name = 'swproxy.config'
+        if not os.path.exists(config_name):
+            self.config = {}
+            return
+
         with open('swproxy.config') as f:
             self.config = json.load(f)
 
     def process_csv_row(self, csv_type, data_type, data):
-        if csv_type not in ['run_logger', 'arena_logger', 'summon_logger', 'raid_logger', 'worldboss_logger', 'toa_logger', 'guild_battle_logger']:
+        if not 'enable_google_sheet_writer' in self.config and self.config['enable_google_sheet_writer']:
+            return
+
+        if csv_type not in ['run_logger', 'arena_logger', 'summon_logger', 'raid_logger', 'worldboss_logger', 'toa_logger']:
             return
 
         t = threading.Thread(target=self.save_row, args = (csv_type, data_type, data))
