@@ -17,7 +17,7 @@ class GoogleSheetWriter(SWPlugin.SWPlugin):
             self.config = json.load(f)
 
     def process_csv_row(self, csv_type, data_type, data):
-        if  not 'enable_google_sheet_writer' in self.config or self.config['enable_google_sheet_writer']:
+        if  not 'enable_google_sheet_writer' in self.config or not self.config['enable_google_sheet_writer']:
             return
 
         if csv_type not in ['run_logger', 'arena_logger', 'summon_logger', 'raid_logger', 'worldboss_logger', 'toa_logger', 'guild_battle_logger']:
@@ -25,7 +25,7 @@ class GoogleSheetWriter(SWPlugin.SWPlugin):
 
         t = threading.Thread(target=self.save_row, args = (csv_type, data_type, data))
         t.start()
-        return
+        return\
 
     def save_row(self, csv_type, data_type, data):
         if data_type == 'entry':
