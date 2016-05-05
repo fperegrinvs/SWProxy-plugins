@@ -3,6 +3,8 @@ import os
 import time
 from SWParser import *
 from SWPlugin import SWPlugin
+import logging
+logger = logging.getLogger()
 import threading
 
 rival_name = { #there may be more, given alt versions of rivals
@@ -87,6 +89,10 @@ class ArenaLogger(SWPlugin):
                 elapsed_time = 'N/A'
 
         wizard_id = str(resp_json['wizard_info']['wizard_id'])
+        if not os.path.exists('%s-optimizer.json' % wizard_id):
+            logger.warn("optimizer file is needed for arena plugin")
+            return
+
         user_mons = self.build_unit_dictionary(wizard_id)
         win_lost = 'Win' if resp_json["win_lose"] == 1 else 'Lost'
 
