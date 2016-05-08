@@ -1,0 +1,7 @@
+[Core]
+Name = Guidwar Logger
+Module = GWLogger
+
+[Documentation]
+Version = 0.1
+Description = Writes Logs of GuildWars
