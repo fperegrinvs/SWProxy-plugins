@@ -1,0 +1,8 @@
+[Core]
+Name = Guild Battle Logger
+Module = GuildBattleLogger
+
+[Documentation]
+Author = Ani
+Version = 0.1
+Description = Log guild battles

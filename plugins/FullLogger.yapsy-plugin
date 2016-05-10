@@ -1,6 +1,6 @@
 [Core]
-Name = Demo Plugin
-Module = DemoPlugin
+Name = Full Logger
+Module = FullLogger
 
 [Documentation]
 Version = 0.1

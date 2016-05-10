@@ -549,7 +549,7 @@ class TCP(object):
             self.socket.listen(self.backlog)
             while True:
                 conn, addr = self.socket.accept()
-                logger.debug('Accepted connection %r at address %r' % (conn, addr))
+                logger.info('Accepted connection %r at address %r' % (conn, addr))
                 client = Client(conn, addr)
                 self.handle(client)
         except Exception as e:

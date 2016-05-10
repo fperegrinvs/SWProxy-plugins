@@ -1,0 +1,8 @@
+[Core]
+Name = Trial of Ascension Logger
+Module = ToALogger
+
+[Documentation]
+Author = Ani
+Version = 0.1
+Description = Log ToA runs and teams used
