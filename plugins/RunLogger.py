@@ -4,6 +4,8 @@ import time
 from SWParser import *
 from SWPlugin import SWPlugin
 import threading
+import logging
+logger = logging.getLogger()
 
 scenario_map = {
     1: 'Garen Forest',
@@ -38,8 +40,7 @@ dungeon_map = {
     6001: "Necropolis",
     7001: "Hall of Light",
     8001: "Giant's Keep",
-    9001: "Dragon's Lair",
-    10025: "Hall of Heroes",
+    9001: "Dragon's Lair"
 }
 
 difficulty_map = {
@@ -118,6 +119,8 @@ def rune_efficiency(rune):
 
 def get_map_value(key, value_map, default='unknown'):
     if key not in value_map:
+        if key > 10000:
+            return "Hall of Heroes"
         return default
     return value_map[key]
 
@@ -170,6 +173,15 @@ class RunLogger(SWPlugin):
         if command == 'BattleScenarioResult' or command == 'BattleDungeonResult':
             return self.log_end_battle(req_json,resp_json, config)
 
+    def build_unit_dictionary(self, wizard_id):
+        if os.path.exists('%s-optimizer.json' % wizard_id):
+            with open('%s-optimizer.json' % wizard_id) as f:
+                user_data = json.load(f)
+                mon_dict = {}
+                for mon in user_data["mons"]:
+                    mon_dict[mon['unit_id']] = mon['name']
+                return mon_dict
+
     def log_end_battle(self, req_json, resp_json, config):
         if not config["log_runs"]:
             return
@@ -189,6 +201,10 @@ class RunLogger(SWPlugin):
                 stage = 'unknown'
 
         wizard_id = str(resp_json['wizard_info']['wizard_id'])
+        if not os.path.exists('%s-optimizer.json' % wizard_id):
+            logger.warn("Optimizer file is needed for RunLogger plugin")
+            return
+        user_mons = self.build_unit_dictionary(wizard_id)
         win_lost = 'Win' if resp_json["win_lose"] == 1 else 'Lost'
 
         # Are we recording losses?
@@ -196,6 +212,7 @@ class RunLogger(SWPlugin):
             return
 
         reward = resp_json['reward'] if 'reward' in resp_json else {}
+        mana = reward['mana'] if 'mana' in reward else 0
         crystal = reward['crystal'] if 'crystal' in reward else 0
         energy = reward['energy'] if 'energy' in reward else 0
         timer = req_json['clear_time']
@@ -203,19 +220,19 @@ class RunLogger(SWPlugin):
         m = divmod(timer / 1000, 60)
         elapsed_time = '%s:%02d' % (m[0], m[1])
 
-
         filename = "%s-runs.csv" % wizard_id
         is_new_file = not os.path.exists(filename)
 
         with open(filename, "ab") as log_file:
             field_names = ['date', 'dungeon', 'result', 'time', 'mana', 'crystal', 'energy', 'drop', 'grade', 'value',
-                            'set', 'eff', 'slot', 'rarity', 'main_stat', 'prefix_stat','sub1','sub2','sub3','sub4']
+                            'set', 'eff', 'slot', 'rarity', 'main_stat', 'prefix_stat','sub1','sub2','sub3','sub4','team1','team2','team3','team4','team5']
 
             header = {'date': 'Date','dungeon': 'Dungeon', 'result': 'Result', 'time':'Clear time', 'mana':'Mana',
                       'crystal': 'Crystal', 'energy': 'Energy', 'drop': 'Drop', 'grade': 'Rune Grade','value': 'Sell value',
                       'set': 'Rune Set', 'eff': 'Max Efficiency', 'slot': 'Slot', 'rarity': 'Rune Rarity',
                       'main_stat': 'Main stat', 'prefix_stat': 'Prefix stat', 'sub1': 'Secondary stat 1',
-                      'sub2': 'Secondary stat 2,', 'sub3': 'Secondary stat 3', 'sub4': 'Secondary stat 4'}
+                      'sub2': 'Secondary stat 2,', 'sub3': 'Secondary stat 3', 'sub4': 'Secondary stat 4',
+                      'team1': 'Team1', 'team2': 'Team2', 'team3': 'Team3', 'team4': 'Team4', 'team5': 'Team5'}
 
             SWPlugin.call_plugins('process_csv_row', ('run_logger', 'header', (field_names, header)))
 
@@ -223,8 +240,16 @@ class RunLogger(SWPlugin):
             if is_new_file:
                 log_writer.writerow(header)
 
+            if 'crate' in reward:
+                if 'mana' in reward['crate']:
+                    reward['mana'] += reward['crate']['mana']
+                if 'energy' in reward['crate']:
+                    reward['energy'] += reward['crate']['energy']
+                if 'crystal' in reward['crate']:
+                    reward['crystal'] += reward['crate']['crystal']
+
             log_entry = {'date': time.strftime("%Y-%m-%d %H:%M"), 'dungeon': stage, 'result': win_lost,
-                         'time': elapsed_time, 'mana': reward['mana'], 'crystal': crystal, 'energy': energy}
+                         'time': elapsed_time, 'mana': mana, 'crystal': crystal, 'energy': energy}
 
             if 'crate' in reward:
                 if 'rune' in reward['crate']:
@@ -252,6 +277,14 @@ class RunLogger(SWPlugin):
                 else:
                     other_item = self.get_item_name(reward['crate'])
                     log_entry['drop'] = other_item
+
+            if 'unit_list' in resp_json and len(resp_json['unit_list']) > 0:
+                for i in range(1, len(resp_json['unit_list']) + 1):
+                    log_entry['team%s' % i] = monster_name(resp_json['unit_list'][i-1]['unit_master_id'])
+            else:
+                for i in range(1, len(req_json['unit_id_list']) + 1):
+                    id = req_json['unit_id_list'][i-1]['unit_id']
+                    log_entry['team%s' % i] = user_mons[id]
 
             if 'instance_info' in resp_json:
                 log_entry['drop'] = 'Secret Dungeon'
