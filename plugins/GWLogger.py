@@ -87,16 +87,24 @@ class GWLogger(SWPlugin.SWPlugin):
         return gc.open(sheet_name)
 
     def gp_values(self, atk1, atk2, gp):
+        # 2 wins
         if atk1 == 'win' and atk2 == 'win':
             return gp / 2, gp/2
 
+        # 2 loses
         if gp == 0:
             return 0, 0
 
+        # draw
         if atk1 == 'draw':
             return 1, gp - 1
+        if atk2 == 'draw':
+            return gp-1, 1
+
+        if atk1 == 'win':
+            return gp, 0
         else:
-            return gp - 1, 1
+            return 0, gp
 
     def write_attack_tab(self, sheet, data, members_list, opponent_list, battle_index):
         wks = sheet.worksheet(attack_tab)
@@ -253,14 +261,12 @@ class GWLogger(SWPlugin.SWPlugin):
         return 'GW - %s (%s)' % (type, week)
 
     def write_log(self, battle_list, sheet):
-        count = 0
-        for battle in battle_list:
-            count += len(battle['matches'])
-
+        count = 2
         wks = sheet.worksheet(log_tab)
-        cells = wks.range('A2:I%s' % (count+2))
-        pos = 0
         for battle in battle_list:
+            c = len(battle['matches'])
+            cells = wks.range('A%s:I%s' % (count, count+c))
+            pos = 0
             for match in battle['matches']:
                 cells[pos].value = match['id']
                 cells[pos+1].value = match['type']
@@ -272,7 +278,8 @@ class GWLogger(SWPlugin.SWPlugin):
                 cells[pos+7].value = match['gp']
                 cells[pos+8].value = match['end']
                 pos += 9
-        wks.update_cells(cells)
+            wks.update_cells(cells)
+            count += c
 
     def write_defense_summary(self, battle_list, member_list, sheet):
         wks = sheet.worksheet(defense_tab)
@@ -289,7 +296,7 @@ class GWLogger(SWPlugin.SWPlugin):
         wks.update_cells(cells)
 
         # write defense data
-        cells = wks.range('B5:CM49')
+        cells = wks.range('B5:CM59')
 
         for battle in battle_list:
             if battle['type'] == 'attack':
@@ -302,6 +309,8 @@ class GWLogger(SWPlugin.SWPlugin):
                 member = match['member_name']
                 count = counters[member]
                 cell = (90 * count) + (member_list.index(member) * 3)
+                if cell >= len(cells):
+                    print member
                 cells[cell].value = '#%s' % str(len(guilds))
                 cells[cell + 1].value = match['result_1'].upper()[0]
                 cells[cell + 2].value = match['result_2'].upper()[0]
@@ -328,4 +337,6 @@ class GWLogger(SWPlugin.SWPlugin):
             index[type] += 1
             if type == 'attack':
                 self.write_attack_tab(sheet, battle, member_list, op_members, battle_index)
+                print 'Log Attack tab'
                 self.write_attack_summary( sheet, battle, member_list, op_members, battle_index)
+                print 'Log Attack Summary'

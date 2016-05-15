@@ -1,5 +1,5 @@
 [Core]
-Name = Guidwar Logger
+Name = Guidwar Summary Logger
 Module = GWLogger
 
 [Documentation]
