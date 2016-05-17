@@ -51,14 +51,6 @@ class MonsterLogger(SWPlugin):
                     scroll = 'Social'
                 else:
                     scroll = 'Unidentified'
-            unit_name = monster_name(resp_json['unit_list'][0]['unit_master_id'],'',False)
-            attribute = monster_attribute(resp_json['unit_list'][0]['attribute'])
-            grade = resp_json['unit_list'][0]['class']
-            awakened = str(resp_json['unit_list'][0]['unit_master_id'])
-            if int(awakened[-2]) == 0:
-                awake = 'No'
-            else:
-                awake = 'Yes'
 
         filename = "%s-summons.csv" % wizard_id
         is_new_file = not os.path.exists(filename)
@@ -75,9 +67,19 @@ class MonsterLogger(SWPlugin):
             if is_new_file:
                 log_writer.writerow(header)
 
-            log_entry = {'date': time.strftime("%Y-%m-%d %H:%M"), 'scroll': scroll, 'unit_name': unit_name,
-                         'attribute': attribute, 'grade': grade, 'awake': awake}
+            if 'unit_list' in resp_json and len(resp_json['unit_list']) > 0:
+                for i in range(0, len(resp_json['unit_list'])):
+                    unit_name = monster_name(resp_json['unit_list'][i]['unit_master_id'],'',False)
+                    attribute = monster_attribute(resp_json['unit_list'][i]['attribute'])
+                    grade = resp_json['unit_list'][i]['class']
+                    awakened = str(resp_json['unit_list'][i]['unit_master_id'])
+                    if int(awakened[-2]) == 0:
+                        awake = 'No'
+                    else:
+                        awake = 'Yes'
+                    log_entry = {'date': time.strftime("%Y-%m-%d %H:%M"), 'scroll': scroll, 'unit_name': unit_name,
+                                 'attribute': attribute, 'grade': grade, 'awake': awake}
 
-            SWPlugin.call_plugins('process_csv_row', ('summon_logger', 'entry', (field_names, log_entry)))
-            log_writer.writerow(log_entry)
+                    SWPlugin.call_plugins('process_csv_row', ('summon_logger', 'entry', (field_names, log_entry)))
+                    log_writer.writerow(log_entry)
             return
