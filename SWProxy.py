@@ -15,7 +15,7 @@ import gspread
 import threading
 from oauth2client.service_account import ServiceAccountCredentials
 
-VERSION = "0.99"
+VERSION = "0.99.4-P"
 GITHUB = 'https://github.com/kakaroto/SWProxy'
 logging.basicConfig()
 logger = logging.getLogger("SWProxy")
