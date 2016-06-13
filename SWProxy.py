@@ -14,7 +14,6 @@ import dpkt
 import gspread
 import threading
 from oauth2client.service_account import ServiceAccountCredentials
-import win32api, win32con
 
 VERSION = "0.99"
 GITHUB = 'https://github.com/kakaroto/SWProxy'
