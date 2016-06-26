@@ -38,7 +38,7 @@ monsters_name_map = {
     "10611": "Tarq",
     "10612": "Sieq",
     "10613": "Gamir",
-    "10614": "Samar",
+    "10614": "Shamar",
     "10615": "Shumar",
 
     "107": "Warbear",
@@ -115,7 +115,7 @@ monsters_name_map = {
     "11711": "Purian",
     "11712": "Tagaros",
     "11713": "Anduril",
-    "11714": "Eludian",
+    "11714": "Eludain",
     "11715": "Drogan",
 
     "118": "Sylph",
@@ -459,7 +459,7 @@ monsters_name_map = {
     "16812": "Mei Hou Wang",
     "16813": "Xing Zhe",
     "16814": "Qitian Dasheng",
-    "16815": "Song Zhang Lao",
+    "16815": "Son Zhang Lao",
 
     "169": "Samurai",
     "16911": "Kaz",
@@ -638,7 +638,7 @@ monsters_name_map = {
 
     "195": "Charger Shark",
     "19511": "Aqcus",
-    "19512": "Ignicius",
+    "19512": "Ignicus",
     "19513": "Zephicus",
     "19514": "Rumicus",
     "19515": "Calicus",
