@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-from SWParser.smon_decryptor import decrypt_request, decrypt_response
+from SWProxyVanilla.SWParser.smon_decryptor import decrypt_request, decrypt_response
 import json
 import logging
 import os
-import proxy
-from SWPlugin import *
+import SWProxyVanilla.proxy
 import socket
 import sys
 import argparse
+from SWPlugin import *
 import struct
 import dpkt
 import gspread
@@ -20,7 +20,7 @@ GITHUB = 'https://github.com/kakaroto/SWProxy'
 logging.basicConfig()
 logger = logging.getLogger("SWProxy")
 
-class HTTP(proxy.TCP):
+class HTTP(SWProxyVanilla.proxy.TCP):
     """
     HTTP proxy server implementation.
     Spawns new process to proxy accepted client connection.
@@ -28,7 +28,7 @@ class HTTP(proxy.TCP):
 
     def handle(self, client):
         callback = SWProxyCallback()
-        proc = proxy.Proxy(client, callback)
+        proc = SWProxyVanilla.proxy.Proxy(client, callback)
         proc.daemon = True
         proc.start()
         logger.debug('Started process {} to handle connection {}'.format(proc, client.conn))
@@ -245,10 +245,11 @@ if __name__ == "__main__":
     if not options.no_gui:
         try:
             # Import here to avoid importing QT in CLI mode
-            from SWParser.gui import gui
+            from SWProxyVanilla.SWParser.gui import gui
             from PyQt4.QtGui import QApplication, QIcon
             from PyQt4.QtCore import QSize
-        except ImportError:
+        except ImportError as e:
+            logger.exception('Exception while executing plugin : {}'.format(e))
             print "Failed to load GUI dependencies. Switching to CLI mode"
             options.no_gui = True
 

@@ -31,8 +31,8 @@ class GoogleSheetWriter(SWPlugin.SWPlugin):
         if data_type == 'entry':
             if csv_type == 'run_logger':
                 tab = 'Runs'
-                last_column = 'Y'
-                total = 'AA1'
+                last_column = 'T'
+                total = 'V1'
             elif csv_type == 'arena_logger':
                 tab = 'Arena'
                 last_column = 'P'

@@ -1,4 +1,4 @@
-from SWParser import rune_effect_type
+from SWProxyVanilla.SWParser.parser import rune_effect_type
 import SWPlugin
 
 

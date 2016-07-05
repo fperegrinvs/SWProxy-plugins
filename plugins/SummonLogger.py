@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from SWParser import *
+from SWProxyVanilla.SWParser import *
 from SWPlugin import SWPlugin
 import threading
 

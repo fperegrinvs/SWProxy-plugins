@@ -2,7 +2,7 @@ import time
 import json
 import os
 from SWPlugin import SWPlugin
-from SWParser import *
+from SWProxyVanilla.SWParser import *
 
 class LiveOptimizer(SWPlugin):
     def __init__(self):
