@@ -34,10 +34,10 @@ class SwarfarmLogger(SWPlugin.SWPlugin):
                 resp = urllib2.urlopen(self.commands_url)
                 self.accepted_commands = json.loads(resp.readline())
                 resp.close()
+                logger.info('SwarfarmLogger - Looking for the following commands to log:\r\n' + ', '.join(self.accepted_commands.keys()))
             except urllib2.HTTPError:
                 logger.fatal('SwarfarmLogger - Unable to retrieve accepted log types. SWARFARM logging is disabled.')
                 self.plugin_enabled = False
-
 
     def process_request(self, req_json, resp_json):
         if self.plugin_enabled:
@@ -59,10 +59,10 @@ class SwarfarmLogger(SWPlugin.SWPlugin):
 
             if result_data:
                 data = json.dumps(result_data)
-                resp = urllib2.urlopen(self.log_url, data=urllib.urlencode({'data': data}))
-                content = resp.readline()
-                resp.close()
-                if resp.getcode() == 200:
-                    logger.info('SwarfarmLogger - {} logged successfully'.format(command))
+                try:
+                    resp = urllib2.urlopen(self.log_url, data=urllib.urlencode({'data': data}))
+                except urllib2.HTTPError as e:
+                    logger.warn('SwarfarmLogger - Error: {}'.format(e.readline()))
                 else:
-                    logger.warn('SwarfarmLogger - Error: %s' % content)
+                    resp.close()
+                    logger.info('SwarfarmLogger - {} logged successfully'.format(command))
