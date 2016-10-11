@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from SWParser import *
 import SWPlugin
 
 class WorldBossLogger(SWPlugin.SWPlugin):

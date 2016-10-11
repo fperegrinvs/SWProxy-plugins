@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from SWProxyVanilla.SWParser import *
+from SWParser import *
 import SWPlugin
 
 class ToALogger(SWPlugin.SWPlugin):
@@ -49,8 +49,7 @@ class ToALogger(SWPlugin.SWPlugin):
             delta = int(time.time()) - start_data['start']
             m = divmod(delta, 60)
             s = m[1]  # seconds
-            h = divmod(m[0], 60)
-            elapsed_time = '%02d:%02d:%02d' % (h[1], h[0], s)
+            elapsed_time = '%s:%02d' % (m[0], s)
         else:
             elapsed_time = 'N/A'
 

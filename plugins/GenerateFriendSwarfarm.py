@@ -1,3 +1,4 @@
+from SWParser import *
 from SWPlugin import SWPlugin
 import logging
 

@@ -6,7 +6,7 @@ from threading import Thread
 import json
 import os
 import time
-from SWProxyVanilla.SWParser import *
+from SWParser import *
 import SWPlugin
 from itertools import groupby
 from string import ascii_uppercase

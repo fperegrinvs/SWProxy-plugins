@@ -1,3 +1,0 @@
-[submodule "SWProxy"]
-	path = SWProxyVanilla
-	url = git@github.com:kakaroto/SWProxy.git
