@@ -40,7 +40,7 @@ class SWProxyCallback(object):
 
     def onRequest(self, proxy, host, port, request):
         try:
-            if host.startswith('summonerswar') and (host.endswith('qpyou.cn') or host.endswith('com2us.net')) and request.url.path.startswith('/api/'):
+            if request.url.path.startswith('/api/gateway'):
                 self.request = request  # if we care about this api call, store request for decryption later
         except AttributeError:
             pass
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='SWParser')
     parser.add_argument('-d', '--debug', action="store_true", default=False)
     parser.add_argument('-g', '--no-gui', action="store_true", default=False)
-    parser.add_argument('-p', '--port', type=int, help='Port number', default=8080, nargs='+')
+    parser.add_argument('-p', '--port', type=int, default=8080)
     options = parser.parse_args()
 
     # Set up logger

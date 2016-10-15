@@ -682,7 +682,7 @@ monsters_name_map = {
     "20111": "Emma",
     "20112": "Lisa",
     "20113": "Olivia",
-    "20114": "Illiana",
+    "20114": "Illianna",
     "20115": "Sylvia",
 
     "202": "Martial Artist",
@@ -763,5 +763,9 @@ monsters_name_map = {
     "21215": "Mi Ying",
 
     "15105": "Devilmon",
-    "14314": "Rainbowmon"
+    "14314": "Rainbowmon",
+
+    "1000111": "Homunculus (Water)",
+    "1000112": "Homunculus (Fire)",
+    "1000113": "Homunculus (Wind)"
 }
