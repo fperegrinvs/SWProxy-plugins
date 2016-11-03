@@ -1,3 +1,5 @@
 pycrypto 
 dpkt 
 yapsy
+gspread
+oauth2client
