@@ -126,9 +126,12 @@ def resource_path(relative_path):
     return os.path.join(os.path.abspath("."), relative_path)
 
 
-def start_proxy_server(options):
-    my_ip = get_external_ip()
-
+def start_proxy_server(options): 
+    if options.interface:
+        my_ip = options.interface
+    else:
+        my_ip = get_external_ip()
+    
     try:
         print "Running Proxy server at {} on port {}".format(my_ip, options.port)
         p = HTTP(my_ip,  options.port)
@@ -232,6 +235,7 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--debug', action="store_true", default=False)
     parser.add_argument('-g', '--no-gui', action="store_true", default=False)
     parser.add_argument('-p', '--port', type=int, default=8080)
+    parser.add_argument('-i', '--interface', type=str)
     options = parser.parse_args()
 
     # Set up logger
