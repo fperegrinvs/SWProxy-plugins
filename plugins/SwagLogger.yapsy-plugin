@@ -1,0 +1,7 @@
+[Core]
+Name = Swag Logger
+Module = SwagLogger
+
+[Documentation]
+Version = 0.1
+Description = Capture guildwar information and upload to Swag
