@@ -153,7 +153,6 @@ def start_proxy_server(options):
     except socket.error:
         logger.error("IP Address and/or Port invalid - can't start Proxy")
 
-
 def parse_pcap(filename):
     streams = dict() # Connections with current buffer
     with open(filename, "rb") as f:
@@ -220,21 +219,19 @@ def parse_pcap(filename):
 
                     if len(request) > 0 and len(response) > 0 and \
                        request.method == 'POST' and \
-                       request.uri == '/api/gateway.php' and \
+                       request.uri == '/api/gateway_c2.php' and \
                        response.status == '200':
                         try:
-                            req_plain = decrypt_request(request.body)
-                            resp_plain = decrypt_response(response.body)
+                            req_plain = decrypt_request(request.body, 2)
+                            resp_plain = decrypt_response(response.body, 2)
                             req_json = json.loads(req_plain)
                             resp_json = json.loads(resp_plain)
 
-                            if 'command' not in resp_json:
-                                return
-
-                            try:
-                                SWPlugin.call_plugins('process_request', (req_json, resp_json))
-                            except Exception as e:
-                                logger.exception('Exception while executing plugin : {}'.format(e))
+                            if resp_json.get('command') in ['HubUserLogin', 'VisitFriend']:
+                                try:
+                                    SWPlugin.call_plugins('process_request', (req_json, resp_json))
+                                except Exception as e:
+                                    logger.exception('Exception while executing plugin : {}'.format(e))
                         except:
                             import traceback
                             e = sys.exc_info()[0]
@@ -243,14 +240,13 @@ def parse_pcap(filename):
             elif (tcp.flags & dpkt.tcp.TH_FIN) != 0:
                 del streams[tupl]
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='SWParser')
     parser.add_argument('-d', '--debug', action="store_true", default=False)
     parser.add_argument('-g', '--no-gui', action="store_true", default=False)
     parser.add_argument('-p', '--port', type=int, default=8080)
     parser.add_argument('-i', '--interface', type=str)
-    options = parser.parse_args()
+    options, unknown_args = parser.parse_known_args()
 
     # Set up logger
     level = "DEBUG" if options.debug else "INFO"
@@ -259,35 +255,49 @@ if __name__ == "__main__":
 
     print get_usage_text()
 
-    # attempt to load gui; fallback if import error
-    if not options.no_gui:
-        try:
-            # Import here to avoid importing QT in CLI mode
-            from SWParser.gui import gui
-            from PyQt4.QtGui import QApplication, QIcon
-            from PyQt4.QtCore import QSize
-        except ImportError:
-            print "Failed to load GUI dependencies. Switching to CLI mode"
-            options.no_gui = True
+    # Check if a PCAP file was passed in
+    pcap_filename = None
+    for arg in unknown_args:
+        if arg.endswith('.pcap'):
+            pcap_filename = arg
+            break
 
-    if options.no_gui:
-        logger.addHandler(logging.StreamHandler())
-        start_proxy_server(options)
+    if pcap_filename:
+        # Parse a PCAP file
+        print "Parsing PCAP file..."
+        parse_pcap(pcap_filename)
+        raw_input("Press Enter to exit...")
     else:
-        app = QApplication(sys.argv)
-        # set the icon
-        icons_path = os.path.join(os.getcwd(), resource_path("icons/"))
-        app_icon = QIcon()
-        app_icon.addFile(icons_path +'16x16.png', QSize(16,16))
-        app_icon.addFile(icons_path + '24x24.png', QSize(24,24))
-        app_icon.addFile(icons_path + '32x32.png', QSize(32,32))
-        app_icon.addFile(icons_path + '48x48.png', QSize(48,48))
-        app_icon.addFile(icons_path + '256x256.png', QSize(256,256))
-        app.setWindowIcon(app_icon)
-        if options.interface:
-            win = gui.MainWindow(options.interface, options.port)
+        # Run the proxy
+        # attempt to load gui; fallback if import error
+        if not options.no_gui:
+            try:
+                # Import here to avoid importing QT in CLI mode
+                from SWParser.gui import gui
+                from PyQt4.QtGui import QApplication, QIcon
+                from PyQt4.QtCore import QSize
+            except ImportError:
+                print "Failed to load GUI dependencies. Switching to CLI mode"
+                options.no_gui = True
+
+        if options.no_gui:
+            logger.addHandler(logging.StreamHandler())
+            start_proxy_server(options)
         else:
-            win = gui.MainWindow(get_external_ip(), options.port)
-        logger.addHandler(gui.GuiLogHandler(win))
-        win.show()
-        sys.exit(app.exec_())
+            app = QApplication(sys.argv)
+            # set the icon
+            icons_path = os.path.join(os.getcwd(), resource_path("icons/"))
+            app_icon = QIcon()
+            app_icon.addFile(icons_path +'16x16.png', QSize(16,16))
+            app_icon.addFile(icons_path + '24x24.png', QSize(24,24))
+            app_icon.addFile(icons_path + '32x32.png', QSize(32,32))
+            app_icon.addFile(icons_path + '48x48.png', QSize(48,48))
+            app_icon.addFile(icons_path + '256x256.png', QSize(256,256))
+            app.setWindowIcon(app_icon)
+            if options.interface:
+                win = gui.MainWindow(options.interface, options.port)
+            else:
+                win = gui.MainWindow(get_external_ip(), options.port)
+            logger.addHandler(gui.GuiLogHandler(win))
+            win.show()
+            sys.exit(app.exec_())
