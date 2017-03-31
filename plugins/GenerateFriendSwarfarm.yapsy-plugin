@@ -1,8 +1,0 @@
-[Core]
-Name = Generate Friend Swarfarm Data
-Module = GenerateFriendSwarfarm
-
-[Documentation]
-Description = Generates data for visited friends for use with Swarfarm
-Version = 1.0
-Author = J-Saas "Grill"
